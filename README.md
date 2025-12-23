@@ -8,8 +8,11 @@ I built an n8n workflow that fetches user data from a public API (dummyjson.com/
 
 ---
 ## ⚠️ Challenges
-**API response** - the response was 1 output with multiple users so I had to use a Split Node to split the users to be several outputs.
-**Post-processing data** - after processing data and inserting them in the spreadsheet, the output of the spreadsheet was equal to the several users, so when I tried to send the successful email at first it returned it several times. Initially I solved it by making the 'send an email' node to execute once, but I saw a more professional approach was aggregating the data to make it 1 output, then sending the email. That also helped me when making the summary fields for the summary/success email.
+**API response** 
+The response was 1 output with multiple users so I had to use a Split Node to split the users to be several outputs.
+
+**Post-processing data** 
+After processing data and inserting them in the spreadsheet, the output of the spreadsheet was equal to the several users, so when I tried to send the successful email at first it returned it several times. Initially I solved it by making the 'send an email' node to execute once, but I saw a more professional approach was aggregating the data to make it 1 output, then sending the email. That also helped me when making the summary fields for the summary/success email.
 
 ---
 ## ✨ Bonus
