@@ -1,59 +1,189 @@
-# Workflow Automation
----
-## 📝 Brief explanation
-I built an n8n workflow that fetches user data from a public API (dummyjson.com/users), process the records and store them in Google sheets.The workflow split the API response into seperate items, then filters out users with emails not ending with '.com', then making fields using user data, like having Full Name field with values of users' firstName and lastName fields, to append these processed users as new rows in Google Sheet. Also added retry logic in the HTTP request node to API failures that retry 3 times each within 1000ms, and implemented error path to go through if there is still an error. On a successful workflow execution, a summary email is sent containing the spreadsheet link and important metrics, while if there is HTTP request error, an email is also sent with the error status and code. 
+# Automated User Data Pipeline
+
+A fault-tolerant workflow automation built with **n8n** that ingests user data from a public API, processes and filters records, stores them in **Google Sheets**, and sends execution summaries or error notifications via email.
+
+The workflow is designed with retry logic, structured error handling, data transformation, and execution metrics to improve reliability, observability, and operational clarity.
 
 ---
-## ⚠️ Challenges
-**API response:** 
 
-The response was 1 output with multiple users so I had to use a Split Node to split the users to be several outputs.
+## 🔍 Overview
 
-**Post-processing data:** 
+This project demonstrates an automated ETL-style pipeline:
 
-After processing data and inserting them in the spreadsheet, the output of the spreadsheet was equal to the several users, so when I tried to send the successful email at first it returned it several times. Initially I solved it by making the 'send an email' node to execute once, but I saw a more professional approach was aggregating the data to make it 1 output, then sending the email. That also helped me when making the summary fields for the summary/success email.
+- **Extract** user data from a public API  
+- **Transform** and filter records based on business rules  
+- **Load** processed data into Google Sheets  
+- Provide **execution visibility** through summary and error emails  
 
----
-## ✨ Bonus
-**Success & Error Emails** - Email sent on error or success for clear workflow outcomes.
-
-**Retry Logic** - The HTTP Node retries failed API requests to handle temporary API issues.
-
-**Summary Metrics** - Aggregated data are used in the Success email to show:
-- Total users fetched
-- Total users processed
-- Total excluded users
-- Workflow completion time
-- Link to the Spreadsheet
-
-These extra features improve workflow reliability, observability and useability 
+The workflow emphasizes resilience and clean data processing practices rather than simple automation.
 
 ---
-## ▶️ Instructions to run the workflow
-1. import the JSON workflow in n8n (included in the repo)
-2. Use a Google account to sign in Google Sheets and Gmail in their nodes
-3. Click Execute Workflow
-4. On success, verify rows are added to the Google Sheet and email is recieved
-5. break the HTTP request temporarily (by misspelling the URL for example) to confirm the error email is triggered and sent
+
+## 🏗 Architecture
+
+Public API (dummyjson.com/users)
+↓
+HTTP Request Node (with retry logic)
+↓
+Split Items (normalize array payload)
+↓
+Apply Top-Level Domain (TLD) filtering to allow only `.com` domains.
+↓
+Transform Data (Full Name + structured fields)
+↓
+Append to Google Sheets
+↓
+Aggregate Metrics
+↓
+Success / Error Email Notification
 
 ---
-## 📸 Screenshots of the Workflow
-<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/066d8cf6-aae7-4a8d-a6c4-b11fc73d483a" />
 
-<img width="1920" height="1200" alt="Screenshot (233)" src="https://github.com/user-attachments/assets/c26dc99f-deb6-4dce-8821-3d602b535103" />
+## ✨ Key Features
 
-<img width="1920" height="1200" alt="Screenshot (242)" src="https://github.com/user-attachments/assets/eca7851c-5ba5-469b-b494-e5d93b7b5ea6" />
-
-<img width="1920" height="1200" alt="Screenshot (245)" src="https://github.com/user-attachments/assets/1bb25a73-e0ea-4892-9d2f-7ff226421c73" />
-
-<img width="1920" height="1200" alt="Screenshot (246)" src="https://github.com/user-attachments/assets/bbee9b71-5303-41af-9d56-b4e214ad91e5" />
+- ✅ Retry logic (3 attempts with 1000ms delay)
+- ✅ Dedicated error handling path
+- ✅ Data transformation & enrichment
+- ✅ Aggregated execution metrics
+- ✅ Success and failure email notifications
+- ✅ Workflow reliability improvements
 
 ---
-## 📊 Workflow Output
 
-<img width="1920" height="1200" alt="Screenshot (252)" src="https://github.com/user-attachments/assets/284ad77f-dee6-4ac2-923a-dd45dfea51ed" />
+## 📊 Metrics Included in Success Email
 
-<img width="1920" height="1200" alt="Screenshot (254)" src="https://github.com/user-attachments/assets/08abb2db-a683-4459-b4eb-757f91c49e39" />
+- Total users fetched  
+- Total users processed  
+- Total excluded users  
+- Workflow execution time  
+- Direct link to the generated spreadsheet  
 
-<img width="1920" height="1200" alt="Screenshot (253)" src="https://github.com/user-attachments/assets/fcbe4004-e928-4bb6-8487-978cf32547e6" />
+These metrics provide execution transparency and improve workflow observability.
 
+---
+
+## ⚙️ Technical Implementation
+
+### API Handling
+
+The API returns a single JSON payload containing multiple user objects.  
+A **Split Items node** is used to normalize the response into individual records for downstream processing.
+
+### Data Filtering
+
+A Top-Level Domain (TLD) filtering rule is applied to enforce domain-based eligibility.  
+Only users with email addresses ending in `.com` are allowed to proceed through the pipeline, while others are excluded from downstream processing.
+
+### Data Transformation
+
+A new `Full Name` field is created by combining: firstName + lastName
+Additional structured fields are prepared before insertion into Google Sheets.
+
+### Aggregation Strategy
+
+After inserting rows into Google Sheets, the output becomes multiple records (one per user).  
+To prevent multiple success emails from being sent, an **aggregation step** consolidates the data into a single summary object before triggering the notification.
+
+This approach ensures:
+- Single notification per execution
+- Clean summary metrics
+- More professional workflow structure
+
+### Error Handling
+
+If the HTTP request fails:
+- The request automatically retries 3 times (1000ms interval).
+- If failures persist, execution flows through a dedicated error path.
+- An error email is sent containing status and error details.
+
+---
+
+## 🛠 Tech Stack
+
+- **n8n** (workflow orchestration)
+- **REST API integration**
+- **Google Sheets API**
+- **Gmail API**
+
+---
+
+## ▶️ How to Run
+
+1. Import the included JSON workflow into n8n.
+2. Authenticate:
+   - Google Sheets node
+   - Gmail node
+3. Click **Execute Workflow**.
+4. On success:
+   - Verify rows are appended to the spreadsheet.
+   - Confirm receipt of the success summary email.
+5. To test error handling:
+   - Temporarily modify the API URL (e.g., misspell it).
+   - Execute the workflow.
+   - Confirm that the error email is triggered.
+
+---
+
+## 📸 Screenshots
+
+### Workflow Design
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/066d8cf6-aae7-4a8d-a6c4-b11fc73d483a" width="750" />
+</p>
+
+### Workflow Output
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/fcbe4004-e928-4bb6-8487-978cf32547e6" width="750" />
+  <img src="https://github.com/user-attachments/assets/284ad77f-dee6-4ac2-923a-dd45dfea51ed" width="750" />
+</p>
+
+---
+
+## 🧠 Design Decisions
+
+### 1. Explicit Retry Strategy
+Instead of relying on a single API call, retry logic was implemented to handle temporary API failures. This improves resilience and reduces false-negative workflow failures.
+
+### 2. Split-Then-Process Pattern
+Normalizing the API response into individual items ensures modular downstream processing and simplifies filtering and transformation.
+
+### 3. Aggregation Before Notification
+Sending emails directly after Google Sheets insertion resulted in duplicate notifications. Aggregating results before notification ensures:
+- Single email per execution
+- Accurate summary metrics
+- Cleaner control flow
+
+### 4. Dedicated Error Path
+Separating the success and error flows improves:
+- Maintainability
+- Observability
+- Debugging clarity
+
+---
+
+## 🚀 Future Improvements
+
+- Add configurable filtering rules (not only `.com` emails)
+- Store execution logs in a separate sheet for historical tracking
+- Add scheduled triggers instead of manual execution
+- Implement Slack/Discord notifications alongside email
+- Containerize n8n setup for easier deployment
+- Add input validation and schema validation before processing
+- Introduce performance benchmarking metrics
+
+---
+
+## 🎯 What This Project Demonstrates
+
+- Workflow orchestration
+- API integration
+- Data transformation and filtering
+- Error handling and fault tolerance
+- Aggregation and metric reporting
+- Production-style automation design thinking
+
+---
+
+## 📌 License
+
+This project is for educational and portfolio purposes.
