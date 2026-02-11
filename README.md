@@ -1,7 +1,4 @@
-# AI Agent Engineer Technical Assessment
-**🎥 Video Walkthrough**
-https://drive.google.com/file/d/1EjEjdyUb2H0lSyZoZ4mMvCdgxX9fmCmE/view?usp=sharing
-
+# Workflow Automation
 ---
 ## 📝 Brief explanation
 I built an n8n workflow that fetches user data from a public API (dummyjson.com/users), process the records and store them in Google sheets.The workflow split the API response into seperate items, then filters out users with emails not ending with '.com', then making fields using user data, like having Full Name field with values of users' firstName and lastName fields, to append these processed users as new rows in Google Sheet. Also added retry logic in the HTTP request node to API failures that retry 3 times each within 1000ms, and implemented error path to go through if there is still an error. On a successful workflow execution, a summary email is sent containing the spreadsheet link and important metrics, while if there is HTTP request error, an email is also sent with the error status and code. 
